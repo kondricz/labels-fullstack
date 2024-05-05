@@ -1,15 +1,11 @@
-import admin from "firebase-admin";
-import { NextApiRequest } from "next";
+import { Request } from "express";
+import * as logger from "firebase-functions/logger";
+import * as admin from 'firebase-admin';
 import { ShopModel } from "../models/shop";
 
-admin.initializeApp({
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  credential: admin.credential.cert(require("../../.env.service-account.json")),
-});
+admin.initializeApp({});
 
-export const authenticateShop = async ({
-  headers,
-}: NextApiRequest) => {
+export const authenticateShop = async ({ headers }: Request) => {
   const auth = admin.auth();
   const authToken = headers["x-auth-id"];
 
@@ -33,7 +29,7 @@ export const authenticateShop = async ({
 
     return shop;
   } catch (e) {
-    console.log("AUTH ERROR:", e);
+    logger.error("AUTH ERROR:", e);
     return null;
   }
 };

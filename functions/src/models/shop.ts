@@ -1,7 +1,7 @@
 import * as mongoose from "mongoose";
-import { PayoutInterface } from "@/backend/models/payout";
-import { SaleInterface } from "@/backend/models/sale";
-import { Country } from "@/backend/config";
+import { Country } from "../config/config";
+import { PayoutInterface } from "./payout";
+import { SaleInterface } from "./sale";
 
 export interface ShopInterface extends mongoose.Document {
   /* Core user information */
@@ -14,6 +14,7 @@ export interface ShopInterface extends mongoose.Document {
   /* Sales related information */
   credit: number;
   comission_percentage: number;
+  tax_rate: number;
   invoice_address: string;
   /* Required information for payout */
   invoice_account_holder: string;
@@ -40,7 +41,8 @@ const ShopSchema = new mongoose.Schema(
     address: { type: String, default: '' },
     shopify_vendor_id: String,
     credit: { type: Number, default: 0 },
-    comission_percentage: { type: Number, default: 0 },
+    comission_percentage: { type: Number, default: 0.20 },
+    tax_rate: { type: Number, default: 0.23 },
     invoice_address: { type: String, default: '' },
     invoice_account_holder: { type: String, default: '' },
     invoice_account_number: { type: String, default: '' },

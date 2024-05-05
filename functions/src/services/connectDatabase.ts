@@ -1,26 +1,24 @@
 import mongoose from "mongoose";
-import { NextResponse } from "next/server";
+import * as logger from "firebase-functions/logger";
+import { Response } from "express";
 
-export const connectDatabase = async () => {
+export const connectDatabase = async (response: Response) => {
   if (mongoose.connections[0].readyState) {
-    console.log(`DATABASE CONNECTION ACTIVE ✅`);
+    logger.info(`DATABASE CONNECTION ACTIVE ✅`);
     return;
   }
   try {
     // Use new db connection
     if (process.env.MONGO_URL) {
-      console.log(`INITIALIZING DATABASE CONNECTION`);
+      logger.info(`INITIALIZING DATABASE CONNECTION`);
       mongoose.set(`strictQuery`, false);
       await mongoose.connect(process.env.MONGO_URL);
     }
     return;
   } catch (err) {
-    console.log(err);
-    console.log(`DATABASE COULD NOT BE CONNECTED 🛑`);
+    logger.error(err);
+    logger.error(`DATABASE COULD NOT BE CONNECTED 🛑`);
 
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    response.status(500).send({ message: "Database could not be connected" });
   }
 };

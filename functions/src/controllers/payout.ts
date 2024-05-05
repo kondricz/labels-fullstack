@@ -1,29 +1,24 @@
-import dayjs from "dayjs";
-import { NextApiRequest } from "next";
-import { connectDatabase } from "@/backend/services/connectDatabase";
-import { authenticateShop } from "@/backend/services/authenticateShop";
-import { PayoutModel } from "@/backend/models/payout";
-import { ShopModel } from "@/backend/models/shop";
-import { NextResponse } from "next/server";
+import * as dayjs from "dayjs";
+import * as logger from "firebase-functions/logger";
+import { Request, Response } from "express";
+import { ShopInterface, ShopModel } from "../models/shop";
+import { PayoutModel } from "../models/payout";
 
-export const payoutGetPayouts = async (req: NextApiRequest) => {
+export const payoutGetPayouts = async (
+  _req: Request,
+  res: Response,
+  shop: ShopInterface
+) => {
   try {
-    await connectDatabase();
-    const shop = await authenticateShop(req);
-
-    if (!shop) {
-      return NextResponse.json({ message: "SHOP NOT FOUND" }, { status: 404 });
-    }
-
     const payoutQuery = {
       shop_id: shop._id,
     };
 
     const payouts = await PayoutModel.find(payoutQuery).lean();
-    return NextResponse.json({ shop, payouts }, { status: 200 });
+    res.status(200).send({ shop, payouts });
   } catch (err) {
-    console.log(err);
-    return NextResponse.json({ message: "GENERAL ERROR" }, { status: 500 });
+    logger.error(err);
+    res.status(500).send({ message: "GENERAL ERROR" });
   }
 };
 
@@ -32,17 +27,14 @@ export const payoutGetPayouts = async (req: NextApiRequest) => {
  *   - `amount` (`number`): Amount of the payout.
  *   - `user_comment` (`string`): User comment for the payout.
  */
-export const payoutCreatePayout = async (req: NextApiRequest) => {
+export const payoutCreatePayout = async (
+  req: Request,
+  res: Response,
+  shop: ShopInterface
+) => {
   try {
-    await connectDatabase();
-    const shop = await authenticateShop(req);
-
-    if (!shop) {
-      return NextResponse.json({ message: "SHOP NOT FOUND" }, { status: 404 });
-    }
-
     if (!req.body.amount || req.body.amount > shop.credit) {
-      return NextResponse.json({ message: "INVALID AMOUNT" }, { status: 422 });
+      res.status(422).send({ message: "INVALID AMOUNT " });
     }
     await PayoutModel.create({
       date: dayjs().format(),
@@ -53,10 +45,10 @@ export const payoutCreatePayout = async (req: NextApiRequest) => {
     await ShopModel.findByIdAndUpdate(shop._id, {
       $inc: { credit: req.body.amount * -1 },
     });
-    return NextResponse.json({}, { status: 201 });
+    res.status(201).send({});
   } catch (err) {
-    console.log(err);
-    return NextResponse.json({ message: "GENERAL ERROR" }, { status: 500 });
+    logger.error(err);
+    res.status(500).send({ message: "GENERAL ERROR" });
   }
 };
 
@@ -66,9 +58,8 @@ export const payoutCreatePayout = async (req: NextApiRequest) => {
  *   - `payout_token` (`string`): Payout token second anchor of authentication
  *   - `action` (`"COMPLETED"|"REJECTED"`): The ID of the product involved in the transaction.
  */
-export const payoutUpdatePayout = async (req: NextApiRequest) => {
+export const payoutUpdatePayout = async (req: Request, res: Response) => {
   try {
-    await connectDatabase();
     const payoutQuery = {
       _id: req.body.payout_id,
       payout_token: req.body.payout_token,
@@ -88,9 +79,9 @@ export const payoutUpdatePayout = async (req: NextApiRequest) => {
       });
     }
 
-    return NextResponse.json({}, { status: 201 });
+    res.status(201).send({});
   } catch (err) {
-    console.log(err);
-    return NextResponse.json({ message: "GENERAL ERROR" }, { status: 500 });
+    logger.error(err);
+    res.status(500).send({ message: "GENERAL ERROR" });
   }
 };
