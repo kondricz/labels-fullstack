@@ -1,0 +1,50 @@
+{
+        id: 890088186047892400,
+        order_id: 820982911946154500,
+        created_at: '2024-05-05T15:45:16+02:00',
+        note: 'Things were damaged',
+        user_id: 96465420552,
+        processed_at: '2024-05-05T15:45:16+02:00',
+        restock: false,
+        duties: [],
+        total_duties_set: {
+          shop_money: { amount: '0.00', currency_code: 'PLN' },
+          presentment_money: { amount: '0.00', currency_code: 'PLN' }
+        },
+        additional_fees: [],
+        total_additional_fees_set: {
+          shop_money: { amount: '0.00', currency_code: 'PLN' },
+          presentment_money: { amount: '0.00', currency_code: 'PLN' }
+        },
+        return: null,
+        refund_shipping_lines: [],
+        admin_graphql_api_id: 'gid://shopify/Refund/890088186047892319',
+        refund_line_items: [
+          {
+            id: 866550311766439000,
+            quantity: 1,
+            line_item_id: 866550311766439000,
+            location_id: null,
+            restock_type: 'no_restock',
+            subtotal: 300,
+            total_tax: 0,
+            subtotal_set: [Object],
+            total_tax_set: [Object],
+            line_item: [Object]
+          },
+          {
+            id: 141249953214523040,
+            quantity: 1,
+            line_item_id: 141249953214522980,
+            location_id: null,
+            restock_type: 'no_restock',
+            subtotal: 300,
+            total_tax: 0,
+            subtotal_set: [Object],
+            total_tax_set: [Object],
+            line_item: [Object]
+          }
+        ],
+        transactions: [],
+        order_adjustments: []
+      }

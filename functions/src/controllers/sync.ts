@@ -67,9 +67,5 @@ export const syncShopSale = async (req: Request, res: Response) => {
     });
   }
 
-  // 1. Create a sale in our sale database
-  // 2. Update the credit of the shop
-  // 3. Send a discord notification
-
   res.status(201).send({});
 };

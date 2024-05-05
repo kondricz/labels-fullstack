@@ -8,6 +8,7 @@ export interface SaleInterface extends mongoose.Document {
   shop_comission: number;
   profit: number;
   sale_date: number;
+  is_refunded: boolean;
 }
 
 const SaleSchema = new mongoose.Schema(
@@ -19,6 +20,7 @@ const SaleSchema = new mongoose.Schema(
     shop_comission: Number,
     profit: Number,
     sale_date: String,
+    is_refunded: { type: Boolean, default: false }
   },
   {
     timestamps: { createdAt: `created_at`, updatedAt: `updated_at` },

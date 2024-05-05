@@ -10,6 +10,7 @@ import { connectDatabase } from "./services/connectDatabase";
 import { shopGetShop, shopUpdateShop } from "./controllers/shop";
 import { verifyShopifyWebhook } from "./services/verifyShopifyWebhook";
 import { syncShopSale } from "./controllers/sync";
+import { refundShopSale } from "./controllers/refund";
 
 /* /api/shop */
 export const shop = onRequest(async (request, response) => {
@@ -60,4 +61,15 @@ export const sync = onRequest(async (request, response) => {
     response.status(403).send({ message: "UNAUTHORIZED"})
   }
   return syncShopSale(request, response)
+});
+
+/* /api/refund */
+export const refund = onRequest(async (request, response) => {
+  const isRequestValid = await verifyShopifyWebhook(request);
+
+  if (!isRequestValid){
+    logger.info("INVALID WEBHOOK REQUEST")
+    response.status(403).send({ message: "UNAUTHORIZED"})
+  }
+  return refundShopSale(request, response)
 });
