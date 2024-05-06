@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { shopify } from "../services/connectShopify";
 import { calculateSale } from "../helpers/calculateSale";
 import { ShopModel } from "../models/shop";
+import { sendProductRefundNotification } from "../services/sendDiscordNotification";
 
 interface ShopRefundRequest {
   refund_line_items: {
@@ -12,7 +13,6 @@ interface ShopRefundRequest {
     location_id: number;
     restock_type: string;
     total_tax: number;
-    vendor: string;
   }[];
 }
 
@@ -20,26 +20,37 @@ export const refundShopSale = async (req: Request, res: Response) => {
   const payload: ShopRefundRequest = req.body;
   const shops = await ShopModel.find();
 
-  const products = await Promise.all(
-    payload.refund_line_items.map(async (item) => ({
-      ...item,
-      product: await shopify.product.get(item.id)
+  const lineItemList = await Promise.all(
+    payload.refund_line_items.map(async (item) => {
+      const product = await shopify.product.get(item.id);
+      const shop = shops.find((shop) => shop._id === product.vendor);
+
+      if (!product || !shop) {
+        return;
+      }
+
+      return { ...item, product, shop };
     })
-  ));
+  );
 
-
-  for (const product of products) {
-    const vendor = shops.find((shop) => shop._id === product.vendor);
-
-    if (!vendor) {
-      return;
+  for (const lineItem of lineItemList) {
+    if (!lineItem) {
+      continue;
     }
-    
-    const prices = calculateSale(product.quantity * product.subtotal, vendor)
+    const prices = calculateSale(
+      lineItem.quantity * lineItem.subtotal,
+      lineItem.shop
+    );
     await new Promise((resolve) => setTimeout(resolve, 250));
-    await ShopModel.findByIdAndUpdate(vendor._id, {
+    await ShopModel.findByIdAndUpdate(lineItem.shop._id, {
       $inc: { credit: prices.comission_amount * -1 },
     });
+
+    await sendProductRefundNotification(
+      lineItem.quantity,
+      lineItem.product.title,
+      lineItem.shop
+    );
   }
 
   res.status(201).send({});

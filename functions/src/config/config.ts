@@ -1,16 +1,16 @@
 export const env = {
-  LOCAL: 'local',
-  DEVELOPMENT: 'development',
-  PRODUCTION: 'production',
-  TEST: 'test',
-  CURRENT: process.env.FORCED_ENV || 'local',
+  LOCAL: "local",
+  DEVELOPMENT: "development",
+  PRODUCTION: "production",
+  TEST: "test",
+  CURRENT: process.env.FORCED_ENV || "local",
 };
 
 export const getUrls = () => ({
-  API: env.CURRENT === env.PRODUCTION ? '' : '',
-  PROFILE: env.CURRENT === env.PRODUCTION ? '' : '',
-  SHOP: env.CURRENT === env.PRODUCTION ? '' : '',
-})
+  API: env.CURRENT === env.PRODUCTION ? "" : "",
+  PROFILE: env.CURRENT === env.PRODUCTION ? "" : "",
+  SHOP: env.CURRENT === env.PRODUCTION ? "" : "",
+});
 
 export enum Country {
   AT = "AT", // Austria
@@ -44,15 +44,15 @@ export enum Country {
 }
 
 export enum Currency {
-  EUR = 'EUR',
-  USD = 'USD',
-  BGN = 'BGN',
-  CZK = 'CZK',
-  DKK = 'DKK',
-  HUF = 'HUF',
-  PLN = 'PLN',
-  RON = 'RON',
-  SEK = 'SEK',
+  EUR = "EUR",
+  USD = "USD",
+  BGN = "BGN",
+  CZK = "CZK",
+  DKK = "DKK",
+  HUF = "HUF",
+  PLN = "PLN",
+  RON = "RON",
+  SEK = "SEK",
 }
 
 export interface CountryInfo {
@@ -232,3 +232,7 @@ export const countries: Record<Country, CountryInfo> = {
     timezone: "CET",
   },
 };
+
+export enum Webhooks {
+  DISCORD_SALES_NOTIFICATION = "https://discord.com/api/webhooks/1236970812289056788/0iOWsMvzgamCixbkxuzrMPqpMpME_1vzVWGvN1d0_4BUjcgX_RyPTOSRi-PUnHP77LjW",
+}

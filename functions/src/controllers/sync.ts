@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
+import { shopify } from "../services/connectShopify";
 import { Currency } from "../config/config";
 import { SaleModel } from "../models/sale";
-import { ShopModel } from "../models/shop";
+import { ShopInterface, ShopModel } from "../models/shop";
 import { calculateSale } from "../helpers/calculateSale";
+import { sendProductBoughtNotification } from "../services/sendDiscordNotification";
+
 import dayjs = require("dayjs");
 
 interface ShopSaleLineItem {
@@ -11,14 +14,6 @@ interface ShopSaleLineItem {
   price: string;
   quantity: number;
   vendor: string;
-}
-
-interface EnrichedLineItem extends ShopSaleLineItem {
-  vendor: string;
-  gross_amount: number;
-  tax_rate: number;
-  comission_amount: number;
-  net_amount: number;
 }
 
 interface ShopSaleRequest {
@@ -36,35 +31,47 @@ export const syncShopSale = async (req: Request, res: Response) => {
   const payload: ShopSaleRequest = req.body;
   const shops = await ShopModel.find();
 
-  const productList = payload.line_items
-    .map((item: ShopSaleLineItem) => {
-      const vendor = shops.find((shop) => shop._id === item.vendor);
-      if (!vendor) {
+  const lineItemList = await Promise.all(
+    payload.line_items.map(async (item: ShopSaleLineItem) => {
+      let shop: ShopInterface | undefined;
+
+      if (!item.vendor) {
+        const product = await shopify.product.get(item.id);
+        shop = shops.find((shop) => shop._id === product.vendor);
+      } else {
+        shop = shops.find((shop) => shop._id === item.vendor);
+      }
+
+      if (!shop) {
         return;
       }
-      const prices = calculateSale(parseInt(item.price), vendor);
+      const prices = calculateSale(parseInt(item.price) * item.quantity, shop);
 
       return {
         ...item,
         ...prices,
-        vendor: vendor._id,
+        shop,
       };
     })
-    .filter(Boolean) as EnrichedLineItem[];
+  );
 
-  for (const product of productList) {
+  for (const lineItem of lineItemList) {
+    if (!lineItem) {
+      continue;
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
-    await ShopModel.findByIdAndUpdate(product.vendor, {
-      $inc: { credit: product.comission_amount },
+    await ShopModel.findByIdAndUpdate(lineItem.shop._id, {
+      $inc: { credit: lineItem.comission_amount },
     });
     await SaleModel.create({
-      product_id: product.id,
-      shop_id: product.vendor,
-      amount: product.gross_amount,
-      shop_comission: product.gross_amount,
-      profit: product.net_amount,
+      product_id: lineItem.id,
+      shop_id: lineItem.shop._id,
+      amount: lineItem.gross_amount,
+      shop_comission: lineItem.comission_amount,
+      profit: lineItem.net_amount,
       sale_date: dayjs().format(),
     });
+    await sendProductBoughtNotification(lineItem.gross_amount, lineItem.shop);
   }
 
   res.status(201).send({});
